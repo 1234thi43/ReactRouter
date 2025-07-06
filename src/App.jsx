@@ -1,6 +1,6 @@
 // import viteLogo from '/vite.svg'
 import './App.module.css';
-import { Routes, Route, Link, Outlet, useParams } from 'react-router-dom';
+import { Routes, Route, NavLink, Outlet, useParams } from 'react-router-dom';
 
 const fetchProductList = () => [
 	{ id: 1, name: 'Телевизор' },
@@ -26,7 +26,7 @@ const Catalog = () => (
 		<ul>
 			{fetchProductList().map(({ id, name }) => (
 				<li key={id}>
-					<Link to={`product/${id}`}>{name}</Link>
+					<NavLink to={`product/${id}`}>{name}</NavLink>
 				</li>
 			))}
 		</ul>
@@ -60,6 +60,20 @@ const Contacts = () => (
 	</div>
 );
 const NotFound = () => <h2>Такой страницы не существует</h2>;
+const ExtendedLink = ({ to, children }) => (
+	<NavLink to={to}>
+		{({ isActive }) =>
+			isActive ? (
+				<>
+					<span>{children}</span>
+					<span>*</span>
+				</>
+			) : (
+				children
+			)
+		}
+	</NavLink>
+);
 
 function App() {
 	return (
@@ -68,13 +82,13 @@ function App() {
 				<h3>Меню</h3>
 				<ul>
 					<li>
-						<Link to="/">Главная</Link>
+						<ExtendedLink to="/">Главная</ExtendedLink>
 					</li>
 					<li>
-						<Link to="/catalog">Каталог</Link>
+						<ExtendedLink to="/catalog">Каталог</ExtendedLink>
 					</li>
 					<li>
-						<Link to="/contacts">Контакты</Link>
+						<ExtendedLink to="/contacts">Контакты</ExtendedLink>
 					</li>
 				</ul>
 			</div>
