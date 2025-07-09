@@ -1,19 +1,38 @@
 // import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react';
 import './App.module.css';
-import { Routes, Route, NavLink, Outlet, useParams } from 'react-router-dom';
+import {
+	Routes,
+	Route,
+	NavLink,
+	Outlet,
+	useParams,
+	useMatch,
+	useNavigate,
+	useRoutes,
+} from 'react-router-dom';
 
-const fetchProductList = () => [
-	{ id: 1, name: 'Телевизор' },
-	{ id: 2, name: 'Компьютер' },
-	{ id: 3, name: 'Телефон' },
-];
-
-const fetchProduct = (id) =>
-	({
+const database = {
+	productList: [
+		{ id: 1, name: 'Телевизор' },
+		{ id: 2, name: 'Компьютер' },
+		{ id: 3, name: 'Телефон' },
+	],
+	products: {
 		1: { id: 1, name: 'Телевизор', price: 29999, amount: 20 },
 		2: { id: 2, name: 'Компьютер', price: 57500, amount: 3 },
 		3: { id: 3, name: 'Телефон', price: 10900, amount: 106 },
-	})[id];
+	},
+};
+
+const fetchProductList = () => database.productList;
+
+const fetchProduct = (id) =>
+	new Promise((resolve) => {
+		setTimeout(() => {
+			resolve(database.products[id]);
+		}, 2500);
+	});
 
 const MainPage = () => (
 	<div>
@@ -34,14 +53,40 @@ const Catalog = () => (
 	</div>
 );
 const ProductNotFound = () => <h2>Продукт не найден</h2>;
+const ProductLoadError = () => <h2>Ошибка загрузки товара. Попробуйте еще раз позже</h2>;
 const Product = () => {
+	const [product, setProduct] = useState(null);
 	const params = useParams();
+	const navigate = useNavigate();
 
-	const product = fetchProduct(params.id);
+	const urlMatchData = useMatch('/catalog/:type/:id');
 
-	if (!product) {
-		return <ProductNotFound />;
-	}
+	console.log(urlMatchData);
+
+	useEffect(() => {
+		let isLoadingTimeout = false;
+		let isProductLoading = false;
+
+		setTimeout(() => {
+			isLoadingTimeout = true;
+
+			if (!isProductLoading) {
+				navigate('/product-load-error', { replace: true });
+			}
+		}, 5000);
+
+		fetchProduct(params.id).then((loadedProduct) => {
+			isProductLoading = true;
+
+			if (!isLoadingTimeout) {
+				if (!product) {
+					return navigate('/product-not-exist');
+				}
+
+				setProduct(loadedProduct);
+			}
+		});
+	}, [params.id, navigate]);
 
 	const { name, price, amount } = product;
 
@@ -76,6 +121,18 @@ const ExtendedLink = ({ to, children }) => (
 );
 
 function App() {
+	const routes = useRoutes([
+		{ path: '/', element: <MainPage /> },
+		{
+			path: '/catalog',
+			element: <Catalog />,
+			children: [
+				{ path: 'product/:id', element: <Product /> },
+				{ path: 'service/:id', element: <Product /> },
+			],
+		},
+	]);
+
 	return (
 		<>
 			<div>
@@ -92,14 +149,19 @@ function App() {
 					</li>
 				</ul>
 			</div>
-			<Routes>
+			{/* <Routes>
 				<Route path="/" element={<MainPage />} />
 				<Route path="/catalog" element={<Catalog />}>
 					<Route path="product/:id" element={<Product />} />
+					<Route path="service/:id" element={<Product />} />
 				</Route>
 				<Route path="/contacts" element={<Contacts />} />
+				<Route path="/product-load-error" element={<ProductLoadError />} />
+				<Route path="/product-not-exist" element={<ProductNotFound />} />
 				<Route path="*" element={<NotFound />} />
-			</Routes>
+			</Routes> */}
+
+			{routes}
 		</>
 	);
 }
